@@ -3,57 +3,75 @@ import java.util.Random;
 
 public class TravelingSalesmanGA {
 
-    // Nombres de las ciudades principales de Colombia
     private static final String[] cities = {
             "Bogota", "Medellin", "Cali", "Barranquilla", "Cartagena", "Bucaramanga", "Cucuta"
     };
 
-    // Matriz de distancias entre ciudades principales de Colombia (en kilómetros)
     private static final int[][] distanceMatrix = {
-            {0, 415, 462, 1002, 1036, 396, 555},   // Bogotá
-            {415, 0, 414, 704, 643, 335, 391},   // Medellín
-            {462, 414, 0, 1204, 1262, 688, 838},   // Cali
-            {1002, 704, 1204, 0, 125, 842, 914},   // Barranquilla
-            {1036, 643, 1262, 125, 0, 726, 830},   // Cartagena
-            {396, 335, 688, 842, 726, 0, 204},   // Bucaramanga
-            {555, 391, 838, 914, 830, 204, 0}    // Cúcuta
+            {0, 415, 462, 1002, 1036, 396, 555},    //Bogota
+            {415, 0, 414, 704, 643, 335, 391},      //Medellin
+            {462, 414, 0, 1204, 1262, 688, 838},    //Cali
+            {1002, 704, 1204, 0, 125, 842, 914},    //Barranquilla
+            {1036, 643, 1262, 125, 0, 726, 830},    //Cartagena
+            {396, 335, 688, 842, 726, 0, 204},      //Bucaramanga
+            {555, 391, 838, 914, 830, 204, 0}       //Cucuta
     };
 
-    private static final int POPULATION_SIZE = 10;
-    private static final int NUM_GENERATIONS = 100;
+    // Define combinaciones de parámetros para evaluar su impacto en el tiempo de cómputo y calidad de resultados
+    private static final int[][] PARAMETER_COMBINATIONS = {
+            {10, 50},    // Combinación rápida
+            {30, 200},   // Combinación intermedia
+            {100, 500}   // Combinación exhaustiva
+    };
 
     public static void main(String[] args) {
-        int[][] population = createInitialPopulation();
+        // Itera a través de diferentes combinaciones de parámetros para observar su impacto en tiempo y resultados
+        for (int[] params : PARAMETER_COMBINATIONS) {
+            int populationSize = params[0];
+            int numGenerations = params[1];
+            System.out.println("\n############################################################################################################");
+            System.out.println("\nParámetros: POPULATION_SIZE = " + populationSize + ", NUM_GENERATIONS = " + numGenerations);
 
-        for (int i = 0; i < NUM_GENERATIONS; i++) {
-            population = evolvePopulation(population);
+            long startTime = System.nanoTime(); // Marca el inicio del cómputo
+
+            int[][] population = createInitialPopulation(populationSize); // Genera la población inicial
+
+            for (int i = 0; i < numGenerations; i++) {
+                population = evolvePopulation(population); // Evoluciona la población por un número de generaciones
+            }
+
+            int[] bestRoute = findBestRoute(population); // Obtiene la mejor ruta de la población final
+            long endTime = System.nanoTime(); // Marca el final del cómputo
+
+            double executionTimeInSeconds = (endTime - startTime) / 1e9; // Calcula el tiempo de ejecución
+
+            // Muestra los resultados de la mejor ruta encontrada y el tiempo de ejecución
+            System.out.println("Mejor ruta encontrada: " + Arrays.toString(convertRouteToCityNames(bestRoute)));
+            System.out.println("Distancia de la mejor ruta: " + calculateRouteDistance(bestRoute));
+            System.out.println("Tiempo de cómputo: " + executionTimeInSeconds + " segundos");
+            System.out.println("URL de Google Maps para visualizar la ruta:");
+            System.out.println(generateGoogleMapsURL(bestRoute));
         }
-
-        int[] bestRoute = findBestRoute(population);
-        System.out.println("Mejor ruta encontrada: " + Arrays.toString(convertRouteToCityNames(bestRoute)));
-        System.out.println("Distancia de la mejor ruta: " + calculateRouteDistance(bestRoute));
-        System.out.println("URL de Google Maps para visualizar la ruta:");
-        System.out.println(generateGoogleMapsURL(bestRoute));
     }
 
     /**
-     * Crea la población inicial para el algoritmo genético,
-     * generando rutas aleatorias para cada individuo.
+     * Crea la población inicial con rutas aleatorias.
      *
-     * @return Una matriz bidimensional donde cada fila representa una ruta (individuo) en la población.
+     * @param populationSize El tamaño de la población.
+     * @return Un array 2D que representa la población inicial.
      */
-    private static int[][] createInitialPopulation() {
-        int[][] population = new int[POPULATION_SIZE][distanceMatrix.length];
-        for (int i = 0; i < POPULATION_SIZE; i++) {
+    private static int[][] createInitialPopulation(int populationSize) {
+        int[][] population = new int[populationSize][distanceMatrix.length];
+        for (int i = 0; i < populationSize; i++) {
             population[i] = createRandomRoute();
         }
         return population;
     }
 
     /**
-     * Genera una ruta aleatoria en forma de arreglo de índices de ciudades.
+     * Crea una ruta aleatoria que representa un camino entre todas las ciudades.
      *
-     * @return Un arreglo que representa una ruta aleatoria entre las ciudades.
+     * @return Un array que contiene el índice de las ciudades en orden aleatorio.
      */
     private static int[] createRandomRoute() {
         int[] route = new int[distanceMatrix.length];
@@ -65,9 +83,9 @@ public class TravelingSalesmanGA {
     }
 
     /**
-     * Mezcla los elementos de un arreglo en orden aleatorio.
+     * Método auxiliar para mezclar un array, creando así una permutación aleatoria.
      *
-     * @param array Arreglo de enteros que representa una ruta a mezclar.
+     * @param array El array a mezclar.
      */
     private static void shuffleArray(int[] array) {
         Random rand = new Random();
@@ -80,17 +98,18 @@ public class TravelingSalesmanGA {
     }
 
     /**
-     * Evoluciona la población actual aplicando selección, cruce y mutación.
+     * Evoluciona la población aplicando selección, cruce y mutación.
      *
-     * @param population La población actual de rutas.
-     * @return Una nueva población generada.
+     * @param population La población actual.
+     * @return La nueva población después de una generación.
      */
     private static int[][] evolvePopulation(int[][] population) {
         int[][] newPopulation = new int[population.length][population[0].length];
         Random rand = new Random();
-        double mutationRate = 0.1;
-        int tournamentSize = 5;
+        double mutationRate = 0.1; // Tasa de mutación
+        int tournamentSize = 5; // Tamaño del torneo de selección
 
+        // Selección y cruce
         for (int i = 0; i < population.length; i++) {
             int[] parent1 = tournamentSelection(population, tournamentSize);
             int[] parent2 = tournamentSelection(population, tournamentSize);
@@ -98,6 +117,7 @@ public class TravelingSalesmanGA {
             newPopulation[i] = child;
         }
 
+        // Mutación
         for (int[] individual : newPopulation) {
             if (rand.nextDouble() < mutationRate) {
                 mutate(individual);
@@ -108,11 +128,11 @@ public class TravelingSalesmanGA {
     }
 
     /**
-     * Selección de individuos mediante torneo para el cruce.
+     * Selecciona un individuo mediante torneo.
      *
-     * @param population     La población de rutas.
-     * @param tournamentSize Tamaño del torneo para selección.
-     * @return La mejor ruta seleccionada en el torneo.
+     * @param population La población actual.
+     * @param tournamentSize Tamaño del torneo.
+     * @return El mejor individuo seleccionado.
      */
     private static int[] tournamentSelection(int[][] population, int tournamentSize) {
         Random rand = new Random();
@@ -137,11 +157,11 @@ public class TravelingSalesmanGA {
     }
 
     /**
-     * Cruza dos rutas para crear una nueva ruta (hijo).
+     * Cruza dos padres para producir un hijo.
      *
-     * @param parent1 La primera ruta padre.
-     * @param parent2 La segunda ruta padre.
-     * @return Una ruta generada a partir del cruce de los padres.
+     * @param parent1 El primer padre.
+     * @param parent2 El segundo padre.
+     * @return El hijo resultante.
      */
     private static int[] crossover(int[] parent1, int[] parent2) {
         Random rand = new Random();
@@ -166,13 +186,6 @@ public class TravelingSalesmanGA {
         return child;
     }
 
-    /**
-     * Verifica si una ruta ya contiene una ciudad.
-     *
-     * @param child La ruta a verificar.
-     * @param gene  El índice de la ciudad.
-     * @return Verdadero si la ciudad ya está en la ruta, falso de lo contrario.
-     */
     private static boolean containsGene(int[] child, int gene) {
         for (int g : child) {
             if (g == gene) return true;
@@ -181,9 +194,9 @@ public class TravelingSalesmanGA {
     }
 
     /**
-     * Realiza una mutación intercambiando dos ciudades en una ruta.
+     * Aplica mutación a un individuo.
      *
-     * @param individual La ruta a mutar.
+     * @param individual El individuo a mutar.
      */
     private static void mutate(int[] individual) {
         Random rand = new Random();
@@ -199,7 +212,7 @@ public class TravelingSalesmanGA {
      * Calcula la distancia total de una ruta.
      *
      * @param route La ruta a calcular.
-     * @return La distancia total de la ruta.
+     * @return La distancia total.
      */
     private static int calculateRouteDistance(int[] route) {
         int distance = 0;
@@ -211,10 +224,10 @@ public class TravelingSalesmanGA {
     }
 
     /**
-     * Encuentra la mejor ruta en la población actual (la de menor distancia).
+     * Encuentra la mejor ruta en una población.
      *
-     * @param population La población de rutas.
-     * @return La ruta con la menor distancia en la población.
+     * @param population La población actual.
+     * @return La mejor ruta encontrada.
      */
     private static int[] findBestRoute(int[][] population) {
         int[] bestRoute = population[0];
@@ -232,31 +245,31 @@ public class TravelingSalesmanGA {
     }
 
     /**
-     * Convierte una ruta de índices de ciudades a nombres de ciudades.
+     * Convierte una ruta de índices a nombres de ciudades.
      *
-     * @param route La ruta a convertir.
-     * @return Un arreglo de nombres de ciudades correspondientes a la ruta.
+     * @param route La ruta en índices.
+     * @return La ruta en nombres de ciudades.
      */
     private static String[] convertRouteToCityNames(int[] route) {
-        String[] cityNames = new String[route.length];
+        String[] cityRoute = new String[route.length];
         for (int i = 0; i < route.length; i++) {
-            cityNames[i] = cities[route[i]];
+            cityRoute[i] = cities[route[i]];
         }
-        return cityNames;
+        return cityRoute;
     }
 
     /**
      * Genera una URL de Google Maps para visualizar la ruta.
      *
-     * @param route La ruta para la cual generar la URL.
-     * @return La URL de Google Maps con la ruta.
+     * @param route La ruta en índices.
+     * @return La URL de Google Maps.
      */
     private static String generateGoogleMapsURL(int[] route) {
         StringBuilder url = new StringBuilder("https://www.google.com/maps/dir/");
-        for (int i : route) {
-            url.append(cities[i]).append("/");
+        for (int cityIndex : route) {
+            url.append(cities[cityIndex]).append("/");
         }
-        url.append(cities[route[0]]);
+        url.append(cities[route[0]]); // Para cerrar el ciclo de la ruta
         return url.toString();
     }
 }
