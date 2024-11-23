@@ -9,25 +9,25 @@ public class TravelingSalesmanGA {
 
     // Nombres de las ciudades
     private static final String[] cities = {
-            "Bogota", "Medellin", "Cali", "Barranquilla", "Cartagena", "Bucaramanga", "Cucuta"
+            "Armenia-Quindio", "Bogota", "Cali", "Barranquilla", "Cucuta", "Medellin", "Bucaramanga", "Cartagena"
     };
 
     // Matriz de distancias entre las ciudades
     private static final int[][] distanceMatrix = {
-            {0, 415, 462, 1002, 1036, 396, 555},
-            {415, 0, 414, 704, 643, 335, 391},
-            {462, 414, 0, 1204, 1262, 688, 838},
-            {1002, 704, 1204, 0, 125, 842, 914},
-            {1036, 643, 1262, 125, 0, 726, 830},
-            {396, 335, 688, 842, 726, 0, 204},
-            {555, 391, 838, 914, 830, 204, 0}
-    };
+            //Ar, Bogo, Ca, Barra, Cuc, Med, Buc, Cartagena
+            {0, 267, 179, 1035, 779, 290, 582, 984},        /* Armenia */
+            {267, 0, 460, 1051, 568, 416, 437, 1011},       /* Bogota */
+            {179, 460, 0, 1187, 959, 442, 762, 1136},       /* Cali */
+            {1035, 1051, 1187, 0, 695, 751, 606, 124},      /* Barranquilla */
+            {779, 568, 959, 695, 0, 577, 196, 712},         /* Cucuta */
+            {290, 416, 442, 751, 577, 0, 382, 696},         /* Medellin */
+            {582, 437, 762, 606, 196, 382, 0, 622},         /* Bucaramanga */
+            {984, 1011, 1136, 124, 712, 696, 622, 0}};      /* Cartagena */
 
     // Diferentes combinaciones de parámetros para la evaluación
     private static final int[][] PARAMETER_COMBINATIONS = {
-            {10, 50},    // Combinación rápida: población pequeña y pocas generaciones
-            {30, 200},   // Combinación intermedia: población moderada y más generaciones
-            {100, 500}   // Combinación exhaustiva: población grande y muchas generaciones
+            {10, 8},// Combinación rápida: población pequeña y pocas generaciones
+            {100, 2000}// Combinación exhaustiva: población grande y muchas generaciones
     };
 
     public static void main(String[] args) {
@@ -49,7 +49,6 @@ public class TravelingSalesmanGA {
                 population[i] = baseRoute.clone(); // Cada individuo empieza con la misma ruta base
             }
 
-            // Evoluciona la población a través de generaciones
             for (int i = 0; i < numGenerations; i++) {
                 population = evolvePopulation(population);
             }
